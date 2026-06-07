@@ -66,7 +66,7 @@ def car_to_dict(car) -> dict[str, Any]:
         "hp":        car.hp
     }
 
-def save_to_dataset(accepted, rejected, folder_path="C:\\Users\\mezin\\Desktop\\Quartz\\Car_Preference_dataset"):
+def save_to_dataset(accepted, rejected, folder_path="PATH/TO/DATASET/FOLDER"):
     os.makedirs(folder_path, exist_ok=True)
 
     existing_files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
