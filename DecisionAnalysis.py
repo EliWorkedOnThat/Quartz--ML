@@ -24,10 +24,10 @@ le_color = LabelEncoder()
 le_fuel = LabelEncoder()
 le_status = LabelEncoder()
 
-df['brand']     = le_brand.fit_transform(df['brand'])
-df['color']     = le_color.fit_transform(df['color'])
-df['fuel_type'] = le_fuel.fit_transform(df['fuel_type'])
-df['status']    = le_status.fit_transform(df['status'])
+df['brand']     = le_brand.fit_transform(df['brand'])    # type: ignore
+df['color']     = le_color.fit_transform(df['color'])    # type: ignore
+df['fuel_type'] = le_fuel.fit_transform(df['fuel_type'])   # type: ignore
+df['status']    = le_status.fit_transform(df['status'])   # type: ignore
 
 print(df.head(10))
-print(f"\nStatus mapping: {dict(zip(le_status.classes_, le_status.transform(le_status.classes_)))}")
+print(f"\nStatus mapping: {dict(zip(le_status.classes_, le_status.transform(le_status.classes_)))}")   # type: ignore
