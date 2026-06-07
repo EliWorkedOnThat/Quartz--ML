@@ -99,6 +99,9 @@ Each choice saves a single JSON file to `Car_Preference_dataset/`:
         "mileage": 20000,
         "fuel_type": "Hybrid",
         "hp": 401,
+        "num_seats": 5,
+        "transmission": "Automatic",
+        "torque": 450,
         "status": "accepted"
     },
     "car_2": {
@@ -109,6 +112,9 @@ Each choice saves a single JSON file to `Car_Preference_dataset/`:
         "mileage": 95000,
         "fuel_type": "Gasoline",
         "hp": 162,
+        "num_seats": 5,
+        "transmission": "Manual",
+        "torque": 210,
         "status": "rejected"
     }
 }
@@ -119,7 +125,7 @@ Each choice saves a single JSON file to `Car_Preference_dataset/`:
 ## 🌲 The Model
 
 - **Algorithm:** Random Forest Classifier (`sklearn.ensemble.RandomForestClassifier`)
-- **Features:** Brand, Year, Color, Price, Mileage, Fuel Type, Horsepower
+- **Features:** Brand, Year, Color, Price, Mileage, Fuel Type, Horsepower, Number of Seats, Transmission, Torque
 - **Labels:** `accepted` / `rejected`
 - **Split:** 80% training / 20% testing
 - **Trees:** Scales with your sample count (`n_estimators = n_samples`)
@@ -131,6 +137,9 @@ price        0.218   ██████████
 year         0.144   ███████
 mileage      0.130   ██████
 brand        0.120   ██████
+torque       0.094   ████
+transmission 0.081   ████
+num_seats    0.073   ███
 color        0.067   ███
 fuel_type    0.061   ███
 ```
@@ -157,7 +166,7 @@ git push origin feature/your-feature-name
 5. **Open a Pull Request** on GitHub
 
 ### Ideas for contributions
-- Add more car attributes (torque, engine size, number of seats)
+- Add more car attributes (engine size, cargo space)
 - Export the trained model to a file so it persists between runs
 - Add a model comparison mode (Random Forest vs XGBoost vs Logistic Regression)
 - Build a web version with Flask or FastAPI
