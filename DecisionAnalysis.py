@@ -30,6 +30,7 @@ df['brand']     = le_brand.fit_transform(df['brand'])     # type: ignore
 df['color']     = le_color.fit_transform(df['color'])     # type: ignore
 df['fuel_type'] = le_fuel.fit_transform(df['fuel_type'])  # type: ignore
 df['status']    = le_status.fit_transform(df['status'])   # type: ignore
+df['transmission'] = le_transmission.fit_transform(df['transmission'])     # type: ignore
 
 print(f"Status mapping: {dict(zip(le_status.classes_, le_status.transform(le_status.classes_)))}")  # type: ignore
 
@@ -53,7 +54,7 @@ test_cars = generate_random_cars()
 
 print("\n--- Prediction Test ---")
 for i, car in enumerate(test_cars):
-    print(f"\nCar {i+1}: {car.brand} {car.year} | ${car.price:,} | {car.mileage:,} miles | {car.hp}HP | {car.fuel_type} | {car.color}")
+    print(f"\nCar {i+1}: {car.brand} {car.year} | ${car.price:,} | {car.mileage:,} miles | {car.hp}HP | {car.fuel_type} | {car.color} | {car.transmisson} | {car.num_seats} Seats | {car.torque} Nm")
 
 rows_to_predict = []
 for car in test_cars:
@@ -64,7 +65,10 @@ for car in test_cars:
         "price":     car.price,
         "mileage":   car.mileage,
         "fuel_type": le_fuel.transform([car.fuel_type])[0], # type: ignore
-        "hp":        car.hp
+        "hp":        car.hp,
+        "num_seats": car.num_seats,
+        "transmission": le_transmission.transform([car.transmission])[0], # type: ignore
+        "torque": car.torque
     })
 
 predict_df = pd.DataFrame(rows_to_predict)
@@ -86,6 +90,9 @@ print(f"  Price:     ${w.price:,}")
 print(f"  Mileage:   {w.mileage:,} miles")
 print(f"  Fuel Type: {w.fuel_type}")
 print(f"  HP:        {w.hp}HP")
+print(f"  Number of seats: {w.num_seats}")
+print(f"  Transmission: {w.transmission}")
+print(f"  Torque: {w.torque}")
 
 print(f"\nConfidence:")
 print(f"  Car 1: {car1_chance * 100:.1f}%")

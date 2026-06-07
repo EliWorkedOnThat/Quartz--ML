@@ -62,7 +62,7 @@ class CarGUI:
             stats_frame = tk.Frame(card, bg=CARD_BG)
             stats_frame.pack(padx=24, pady=4, fill="x")
 
-            fields = ["Brand", "Year", "Color", "Price", "Mileage", "Fuel Type", "Horsepower"]
+            fields = ["Brand", "Year", "Color", "Price", "Mileage", "Fuel Type", "Horsepower","Number of Seats", "Transmission", "Torque"]
             car_labels = {}
             for field in fields:
                 row = tk.Frame(stats_frame, bg=CARD_BG)
@@ -101,6 +101,9 @@ class CarGUI:
             "Mileage":    lambda c: f"{c.mileage:,} miles",
             "Fuel Type":  lambda c: c.fuel_type,
             "Horsepower": lambda c: f"{c.hp} HP",
+            "Number of Seats": lambda c: str(c.num_seats),
+            "Transmission": lambda c: c.transmission,
+            "Torque": lambda c: f"{c.torque} Nm",
         }
         for i, car in enumerate(self.cars):
             for field, getter in fields_map.items():
