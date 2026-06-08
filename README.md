@@ -65,6 +65,8 @@ pip install scikit-learn pandas
 
 ## Usage
 
+### You can use setup.py to automatically generate the dataset folder and let the project files use that path
+
 ### Step 1 — Collect your preferences
 ```bash
 python CarGUI.py
