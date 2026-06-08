@@ -16,8 +16,14 @@ TEXT     = "#f1f1f1"
 SUBTEXT  = "#888888"
 GOLD     = "#facc15"
 
+def load_config():
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+    with open(config_path, 'r') as f:
+        return json.load(f)
+
 def train_model():
-    samples_path = r"TEST/PATH/TO/DATASET/FOLDER"
+    config = load_config()
+    samples_path = config["dataset_path"]
     n_samples = len([f for f in os.listdir(samples_path) if f.endswith('.json')])
     rows = []
 
@@ -29,6 +35,8 @@ def train_model():
                 rows.append(car)
 
     df = pd.DataFrame(rows)
+    print(f"Columns: {df.columns.tolist()}") 
+    print(f"Rows loaded: {len(df)}")           
 
     le_brand        = LabelEncoder()
     le_color        = LabelEncoder()
@@ -36,11 +44,11 @@ def train_model():
     le_transmission = LabelEncoder()
     le_status       = LabelEncoder()
 
-    df['brand']        = le_brand.fit_transform(df['brand'])                   # type: ignore
-    df['color']        = le_color.fit_transform(df['color'])                   # type: ignore
-    df['fuel_type']    = le_fuel.fit_transform(df['fuel_type'])                # type: ignore
-    df['transmission'] = le_transmission.fit_transform(df['transmission'])     # type: ignore
-    df['status']       = le_status.fit_transform(df['status'])                 # type: ignore
+    df['brand']        = le_brand.fit_transform(df['brand'])                 # type: ignore
+    df['color']        = le_color.fit_transform(df['color'])                 # type: ignore
+    df['fuel_type']    = le_fuel.fit_transform(df['fuel_type'])              # type: ignore
+    df['transmission'] = le_transmission.fit_transform(df['transmission'])   # type: ignore
+    df['status']       = le_status.fit_transform(df['status'])               # type: ignore
 
     X = df.drop(columns=['status'])
     y = df['status']
@@ -62,16 +70,16 @@ def predict(clf, le_brand, le_color, le_fuel, le_transmission, le_status, cars):
     rows_to_predict = []
     for car in cars:
         rows_to_predict.append({
-            "brand":     le_brand.transform([car.brand])[0],    # type: ignore
-            "year":      car.year,
-            "color":     le_color.transform([car.color])[0],    # type: ignore
-            "price":     car.price,
-            "mileage":   car.mileage,
-            "fuel_type": le_fuel.transform([car.fuel_type])[0], # type: ignore
-            "hp":        car.hp,
-            "num_seats": car.num_seats,
-            "transmission": le_transmission.transform([car.transmission])[0], # type: ignore
-            "torque": car.torque
+            "brand":        le_brand.transform([car.brand])[0],          # type: ignore
+            "year":         car.year,
+            "color":        le_color.transform([car.color])[0],          # type: ignore
+            "price":        car.price,
+            "mileage":      car.mileage,
+            "fuel_type":    le_fuel.transform([car.fuel_type])[0],       # type: ignore
+            "hp":           car.hp,
+            "num_seats":    car.num_seats,
+            "transmission": le_transmission.transform([car.transmission])[0],  # type: ignore
+            "torque":       car.torque
         })
 
     predict_df = pd.DataFrame(rows_to_predict)
@@ -93,11 +101,11 @@ class ResultGUI:
         self.root.geometry("960x700")
         self.root.resizable(False, False)
 
-        self.title_font    = font.Font(family="Courier New", size=16, weight="bold")
-        self.header_font   = font.Font(family="Courier New", size=13, weight="bold")
-        self.label_font    = font.Font(family="Courier New", size=11, weight="bold")
-        self.subtext_font  = font.Font(family="Courier New", size=9)
-        self.imp_font      = font.Font(family="Courier New", size=10, weight="bold")
+        self.title_font   = font.Font(family="Courier New", size=16, weight="bold")
+        self.header_font  = font.Font(family="Courier New", size=13, weight="bold")
+        self.label_font   = font.Font(family="Courier New", size=11, weight="bold")
+        self.subtext_font = font.Font(family="Courier New", size=9)
+        self.imp_font     = font.Font(family="Courier New", size=10, weight="bold")
 
         self.clf, self.le_brand, self.le_color, self.le_fuel, self.le_transmission, self.le_status, \
             self.accuracy, self.importances, self.n_samples = train_model()
@@ -106,7 +114,6 @@ class ResultGUI:
         self.run_prediction()
 
     def build_ui(self):
-        # Top bar
         top = tk.Frame(self.root, bg=BG)
         top.pack(fill="x", padx=32, pady=(20, 0))
 
@@ -123,7 +130,6 @@ class ResultGUI:
 
         tk.Frame(self.root, bg="#2a2a2a", height=1).pack(fill="x", padx=32, pady=12)
 
-        # Cards row
         cards_row = tk.Frame(self.root, bg=BG)
         cards_row.pack(fill="x", padx=32)
 
@@ -158,7 +164,6 @@ class ResultGUI:
                 "card": card, "header": header, "labels": labels, "conf": conf_label
             })
 
-        # Winner banner
         self.winner_var = tk.StringVar(value="")
         self.winner_label = tk.Label(self.root, textvariable=self.winner_var,
                                      font=self.title_font, bg=BG, fg=GOLD)
@@ -166,7 +171,6 @@ class ResultGUI:
 
         tk.Frame(self.root, bg="#2a2a2a", height=1).pack(fill="x", padx=32, pady=8)
 
-        # Feature importances
         tk.Label(self.root, text="WHAT THE MODEL LEARNED ABOUT YOU",
                  font=self.subtext_font, bg=BG, fg=SUBTEXT).pack()
 
@@ -183,7 +187,6 @@ class ResultGUI:
 
         tk.Frame(self.root, bg="#2a2a2a", height=1).pack(fill="x", padx=32, pady=8)
 
-        # Next button
         btn = tk.Button(self.root, text="PREDICT NEXT PAIR",
                         font=self.header_font, bg=ACCENT, fg=BG,
                         relief="flat", cursor="hand2", pady=8, padx=24,
@@ -198,16 +201,16 @@ class ResultGUI:
                                   self.le_fuel, self.le_transmission, self.le_status, self.cars)
 
         specs = [
-            ("Brand",     lambda c: c.brand),
-            ("Year",      lambda c: str(c.year)),
-            ("Color",     lambda c: c.color),
-            ("Price",     lambda c: f"${c.price:,}"),
-            ("Mileage",   lambda c: f"{c.mileage:,} miles"),
-            ("Fuel Type", lambda c: c.fuel_type),
-            ("HP",        lambda c: f"{c.hp} HP"),
-            ("Number of Seats", lambda c: str(c.num_seats)),
-            ("Transmission", lambda c: c.transmission),
-            ("Torque", lambda c: f"{c.torque} Nm"),
+            ("Brand",            lambda c: c.brand),
+            ("Year",             lambda c: str(c.year)),
+            ("Color",            lambda c: c.color),
+            ("Price",            lambda c: f"${c.price:,}"),
+            ("Mileage",          lambda c: f"{c.mileage:,} miles"),
+            ("Fuel Type",        lambda c: c.fuel_type),
+            ("HP",               lambda c: f"{c.hp} HP"),
+            ("Number of Seats",  lambda c: str(c.num_seats)),
+            ("Transmission",     lambda c: c.transmission),
+            ("Torque",           lambda c: f"{c.torque} Nm"),
         ]
 
         confidences = [c1, c2]

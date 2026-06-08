@@ -6,7 +6,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from CarGenerator import generate_random_cars
 
-samples_path = r"PATH/TO/DATASET/FOLDER"
+def load_config():
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+    with open(config_path, 'r') as f:
+        return json.load(f)
+
+config = load_config()
+samples_path = config["dataset_path"]
+
 n_samples = len([f for f in os.listdir(samples_path) if f.endswith('.json')])
 rows = []
 
@@ -21,17 +28,17 @@ print(f"Loaded {len(rows)} rows")
 
 df = pd.DataFrame(rows)
 
-le_brand  = LabelEncoder()
-le_color  = LabelEncoder()
-le_fuel   = LabelEncoder()
-le_status = LabelEncoder()
+le_brand        = LabelEncoder()
+le_color        = LabelEncoder()
+le_fuel         = LabelEncoder()
+le_status       = LabelEncoder()
 le_transmission = LabelEncoder()
 
-df['brand']     = le_brand.fit_transform(df['brand'])     # type: ignore
-df['color']     = le_color.fit_transform(df['color'])     # type: ignore
-df['fuel_type'] = le_fuel.fit_transform(df['fuel_type'])  # type: ignore
-df['status']    = le_status.fit_transform(df['status'])   # type: ignore
-df['transmission'] = le_transmission.fit_transform(df['transmission'])     # type: ignore
+df['brand']        = le_brand.fit_transform(df['brand'])                 # type: ignore
+df['color']        = le_color.fit_transform(df['color'])                 # type: ignore
+df['fuel_type']    = le_fuel.fit_transform(df['fuel_type'])              # type: ignore
+df['status']       = le_status.fit_transform(df['status'])               # type: ignore
+df['transmission'] = le_transmission.fit_transform(df['transmission'])   # type: ignore
 
 print(f"Status mapping: {dict(zip(le_status.classes_, le_status.transform(le_status.classes_)))}")  # type: ignore
 
@@ -49,7 +56,7 @@ feature_names = ['brand', 'year', 'color', 'price', 'mileage', 'fuel_type', 'hp'
 
 print("\nFeature Importances:")
 for feature, importance in sorted(zip(feature_names, clf.feature_importances_), key=lambda x: x[1], reverse=True):
-    print(f"  {feature:<12} {importance:.3f}")
+    print(f"  {feature:<14} {importance:.3f}")
 
 test_cars = generate_random_cars()
 
@@ -60,20 +67,19 @@ for i, car in enumerate(test_cars):
 rows_to_predict = []
 for car in test_cars:
     rows_to_predict.append({
-        "brand":     le_brand.transform([car.brand])[0],    # type: ignore
-        "year":      car.year,
-        "color":     le_color.transform([car.color])[0],    # type: ignore
-        "price":     car.price,
-        "mileage":   car.mileage,
-        "fuel_type": le_fuel.transform([car.fuel_type])[0], # type: ignore
-        "hp":        car.hp,
-        "num_seats": car.num_seats,
-        "transmission": le_transmission.transform([car.transmission])[0], # type: ignore
-        "torque": car.torque
+        "brand":        le_brand.transform([car.brand])[0],          # type: ignore
+        "year":         car.year,
+        "color":        le_color.transform([car.color])[0],          # type: ignore
+        "price":        car.price,
+        "mileage":      car.mileage,
+        "fuel_type":    le_fuel.transform([car.fuel_type])[0],       # type: ignore
+        "hp":           car.hp,
+        "num_seats":    car.num_seats,
+        "transmission": le_transmission.transform([car.transmission])[0],  # type: ignore
+        "torque":       car.torque
     })
 
 predict_df = pd.DataFrame(rows_to_predict)
-
 probabilities = clf.predict_proba(predict_df)
 
 accepted_index = list(clf.classes_).index(le_status.transform(['accepted'])[0])  # type: ignore
@@ -84,16 +90,16 @@ winner = 0 if car1_chance > car2_chance else 1
 
 print(f"\nModel predicts you'd pick: Car {winner + 1}")
 w = test_cars[winner]
-print(f"  Brand:     {w.brand}")
-print(f"  Year:      {w.year}")
-print(f"  Color:     {w.color}")
-print(f"  Price:     ${w.price:,}")
-print(f"  Mileage:   {w.mileage:,} miles")
-print(f"  Fuel Type: {w.fuel_type}")
-print(f"  HP:        {w.hp}HP")
-print(f"  Number of seats: {w.num_seats}")
+print(f"  Brand:        {w.brand}")
+print(f"  Year:         {w.year}")
+print(f"  Color:        {w.color}")
+print(f"  Price:        ${w.price:,}")
+print(f"  Mileage:      {w.mileage:,} miles")
+print(f"  Fuel Type:    {w.fuel_type}")
+print(f"  HP:           {w.hp}HP")
+print(f"  Seats:        {w.num_seats}")
 print(f"  Transmission: {w.transmission}")
-print(f"  Torque: {w.torque}")
+print(f"  Torque:       {w.torque} Nm")
 
 print(f"\nConfidence:")
 print(f"  Car 1: {car1_chance * 100:.1f}%")
