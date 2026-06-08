@@ -68,13 +68,16 @@ def choose_car(cars):
 
 def car_to_dict(car) -> dict[str, Any]:
     return {
-        "brand":     car.brand,
-        "year":      car.year,
-        "color":     car.color,
-        "price":     car.price,
-        "mileage":   car.mileage,
-        "fuel_type": car.fuel_type,
-        "hp":        car.hp
+        "brand":        car.brand,
+        "year":         car.year,
+        "color":        car.color,
+        "price":        car.price,
+        "mileage":      car.mileage,
+        "fuel_type":    car.fuel_type,
+        "hp":           car.hp,
+        "num_seats":    car.num_seats,
+        "transmission": car.transmission,
+        "torque":       car.torque
     }
 
 def save_to_dataset(accepted, rejected, folder_path="PATH/TO/DATASET/FOLDER"):

@@ -25,6 +25,7 @@ le_brand  = LabelEncoder()
 le_color  = LabelEncoder()
 le_fuel   = LabelEncoder()
 le_status = LabelEncoder()
+le_transmission = LabelEncoder()
 
 df['brand']     = le_brand.fit_transform(df['brand'])     # type: ignore
 df['color']     = le_color.fit_transform(df['color'])     # type: ignore
@@ -44,7 +45,7 @@ clf.fit(X_train, y_train)
 
 print(f"Accuracy: {clf.score(X_test, y_test) * 100:.1f}%")
 
-feature_names = ['brand', 'year', 'color', 'price', 'mileage', 'fuel_type', 'hp']
+feature_names = ['brand', 'year', 'color', 'price', 'mileage', 'fuel_type', 'hp', 'num_seats', 'transmission', 'torque']
 
 print("\nFeature Importances:")
 for feature, importance in sorted(zip(feature_names, clf.feature_importances_), key=lambda x: x[1], reverse=True):
@@ -54,7 +55,7 @@ test_cars = generate_random_cars()
 
 print("\n--- Prediction Test ---")
 for i, car in enumerate(test_cars):
-    print(f"\nCar {i+1}: {car.brand} {car.year} | ${car.price:,} | {car.mileage:,} miles | {car.hp}HP | {car.fuel_type} | {car.color} | {car.transmisson} | {car.num_seats} Seats | {car.torque} Nm")
+    print(f"\nCar {i+1}: {car.brand} {car.year} | ${car.price:,} | {car.mileage:,} miles | {car.hp}HP | {car.fuel_type} | {car.color} | {car.transmission} | {car.num_seats} Seats | {car.torque} Nm")
 
 rows_to_predict = []
 for car in test_cars:
