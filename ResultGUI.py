@@ -30,15 +30,17 @@ def train_model():
 
     df = pd.DataFrame(rows)
 
-    le_brand  = LabelEncoder()
-    le_color  = LabelEncoder()
-    le_fuel   = LabelEncoder()
-    le_status = LabelEncoder()
+    le_brand        = LabelEncoder()
+    le_color        = LabelEncoder()
+    le_fuel         = LabelEncoder()
+    le_transmission = LabelEncoder()
+    le_status       = LabelEncoder()
 
-    df['brand']     = le_brand.fit_transform(df['brand'])     # type: ignore
-    df['color']     = le_color.fit_transform(df['color'])     # type: ignore
-    df['fuel_type'] = le_fuel.fit_transform(df['fuel_type'])  # type: ignore
-    df['status']    = le_status.fit_transform(df['status'])   # type: ignore
+    df['brand']        = le_brand.fit_transform(df['brand'])                   # type: ignore
+    df['color']        = le_color.fit_transform(df['color'])                   # type: ignore
+    df['fuel_type']    = le_fuel.fit_transform(df['fuel_type'])                # type: ignore
+    df['transmission'] = le_transmission.fit_transform(df['transmission'])     # type: ignore
+    df['status']       = le_status.fit_transform(df['status'])                 # type: ignore
 
     X = df.drop(columns=['status'])
     y = df['status']
@@ -50,12 +52,13 @@ def train_model():
 
     accuracy = clf.score(X_test, y_test) * 100
 
-    feature_names = ['brand', 'year', 'color', 'price', 'mileage', 'fuel_type', 'hp']
+    feature_names = ['brand', 'year', 'color', 'price', 'mileage', 'fuel_type', 'hp',
+                     'num_seats', 'transmission', 'torque']
     importances = sorted(zip(feature_names, clf.feature_importances_), key=lambda x: x[1], reverse=True)
 
-    return clf, le_brand, le_color, le_fuel, le_status, accuracy, importances, n_samples
+    return clf, le_brand, le_color, le_fuel, le_transmission, le_status, accuracy, importances, n_samples
 
-def predict(clf, le_brand, le_color, le_fuel, le_status, cars):
+def predict(clf, le_brand, le_color, le_fuel, le_transmission, le_status, cars):
     rows_to_predict = []
     for car in cars:
         rows_to_predict.append({
@@ -65,7 +68,10 @@ def predict(clf, le_brand, le_color, le_fuel, le_status, cars):
             "price":     car.price,
             "mileage":   car.mileage,
             "fuel_type": le_fuel.transform([car.fuel_type])[0], # type: ignore
-            "hp":        car.hp
+            "hp":        car.hp,
+            "num_seats": car.num_seats,
+            "transmission": le_transmission.transform([car.transmission])[0], # type: ignore
+            "torque": car.torque
         })
 
     predict_df = pd.DataFrame(rows_to_predict)
@@ -93,7 +99,7 @@ class ResultGUI:
         self.subtext_font  = font.Font(family="Courier New", size=9)
         self.imp_font      = font.Font(family="Courier New", size=10, weight="bold")
 
-        self.clf, self.le_brand, self.le_color, self.le_fuel, self.le_status, \
+        self.clf, self.le_brand, self.le_color, self.le_fuel, self.le_transmission, self.le_status, \
             self.accuracy, self.importances, self.n_samples = train_model()
 
         self.build_ui()
@@ -132,7 +138,8 @@ class ResultGUI:
                               bg=CARD_BG, fg=SUBTEXT)
             header.pack(pady=(16, 8))
 
-            fields = ["Brand", "Year", "Color", "Price", "Mileage", "Fuel Type", "HP"]
+            fields = ["Brand", "Year", "Color", "Price", "Mileage", "Fuel Type", "HP",
+                      "Number of Seats", "Transmission", "Torque"]
             labels = {}
             for field in fields:
                 row = tk.Frame(card, bg=CARD_BG)
@@ -188,7 +195,7 @@ class ResultGUI:
     def run_prediction(self):
         self.cars = generate_random_cars()
         winner, c1, c2 = predict(self.clf, self.le_brand, self.le_color,
-                                  self.le_fuel, self.le_status, self.cars)
+                                  self.le_fuel, self.le_transmission, self.le_status, self.cars)
 
         specs = [
             ("Brand",     lambda c: c.brand),
@@ -198,6 +205,9 @@ class ResultGUI:
             ("Mileage",   lambda c: f"{c.mileage:,} miles"),
             ("Fuel Type", lambda c: c.fuel_type),
             ("HP",        lambda c: f"{c.hp} HP"),
+            ("Number of Seats", lambda c: str(c.num_seats)),
+            ("Transmission", lambda c: c.transmission),
+            ("Torque", lambda c: f"{c.torque} Nm"),
         ]
 
         confidences = [c1, c2]

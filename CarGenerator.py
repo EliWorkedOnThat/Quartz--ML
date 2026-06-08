@@ -4,7 +4,7 @@ import json
 from typing import Any
 
 class Car:
-    def __init__(self, brand, year, color, price, mileage, fuel_type , hp):
+    def __init__(self, brand, year, color, price, mileage, fuel_type , hp, num_seats, transmission, torque):
         self.brand = brand
         self.year = year
         self.color = color
@@ -12,11 +12,16 @@ class Car:
         self.mileage = mileage
         self.fuel_type = fuel_type
         self.hp = hp
+        self.num_seats = num_seats
+        self.transmission = transmission
+        self.torque = torque
 
 def generate_random_cars():
     brands = ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'BMW']
     colors = ['Red', 'Blue', 'Black', 'White', 'Silver']
     fuel_types = ['Gasoline', 'Diesel', 'Electric', 'Hybrid']
+    transmission = ['Automatic', 'Manual']
+
 
     cars = []
     for i in range(2):
@@ -27,7 +32,10 @@ def generate_random_cars():
             random.randint(5000, 50000),
             random.randint(0, 200000),
             random.choice(fuel_types),
-            random.randint(100, 800)
+            random.randint(100, 800),
+            random.choice([2,5,6,7,8,9]),
+            random.choice(transmission),
+            random.randint(100,700)
         )
         cars.append(car)
     return cars
@@ -42,6 +50,9 @@ def display_cars(cars):
         print(f"  Mileage:   {car.mileage} miles")
         print(f"  Fuel Type: {car.fuel_type}")
         print(f"  Horsepower: {car.hp} HP")
+        print(f"  Number of Seats: {car.num_seats}")
+        print(f"  Transmission Type: {car.transmission} ")
+        print(f"  Torque: {car.torque} Nm")
 
 def choose_car(cars):
     while True:
