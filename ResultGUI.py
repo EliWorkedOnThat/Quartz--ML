@@ -17,7 +17,7 @@ SUBTEXT  = "#888888"
 GOLD     = "#facc15"
 
 def train_model():
-    samples_path = r"C:\Users\mezin\Desktop\Quartz\Car_Preference_dataset"
+    samples_path = r"TEST/PATH/TO/DATASET/FOLDER"
     n_samples = len([f for f in os.listdir(samples_path) if f.endswith('.json')])
     rows = []
 
