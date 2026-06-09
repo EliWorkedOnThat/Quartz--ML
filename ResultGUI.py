@@ -55,7 +55,7 @@ def train_model():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    clf = RandomForestClassifier(n_estimators=n_samples)
+    clf = RandomForestClassifier(n_estimators=n_samples , max_depth = 10 , min_samples_split = 5)
     clf.fit(X_train, y_train)
 
     accuracy = clf.score(X_test, y_test) * 100
