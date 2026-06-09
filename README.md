@@ -184,7 +184,7 @@ git push origin feature/your-feature-name
 - [x] Random Forest training pipeline
 - [x] Feature importance visualization
 - [x] Prediction GUI with confidence scores
-- [ ] Persist trained model to disk
+- [x] Persist trained model to disk
 - [ ] Cross-validation for more reliable accuracy
 - [ ] Web interface
 
