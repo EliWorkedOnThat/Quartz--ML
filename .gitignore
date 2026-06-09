@@ -1,3 +1,4 @@
 Car_Preference_dataset/
 __pycache__/
 *.pyc
+*quartz_model.pkl

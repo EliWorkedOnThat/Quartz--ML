@@ -3,6 +3,7 @@ from tkinter import font
 import json
 import os
 import pandas as pd
+import joblib
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -16,17 +17,39 @@ TEXT     = "#f1f1f1"
 SUBTEXT  = "#888888"
 GOLD     = "#facc15"
 
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quartz_model.pkl")
+
+
 def load_config():
     config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
     with open(config_path, 'r') as f:
         return json.load(f)
 
+
 def train_model():
     config = load_config()
     samples_path = config["dataset_path"]
     n_samples = len([f for f in os.listdir(samples_path) if f.endswith('.json')])
-    rows = []
 
+    # --- Try loading a saved model first ---
+    if os.path.exists(MODEL_PATH):
+        bundle = joblib.load(MODEL_PATH)
+        if bundle["n_samples"] == n_samples:
+            print(f"Loaded saved model ({n_samples} samples, no new data)")
+            clf             = bundle["clf"]
+            le_brand        = bundle["le_brand"]
+            le_color        = bundle["le_color"]
+            le_fuel         = bundle["le_fuel"]
+            le_transmission = bundle["le_transmission"]
+            le_status       = bundle["le_status"]
+            accuracy        = bundle["accuracy"]
+            importances     = bundle["importances"]
+            return clf, le_brand, le_color, le_fuel, le_transmission, le_status, accuracy, importances, n_samples
+        else:
+            print(f"Dataset grew ({bundle['n_samples']} → {n_samples}), retraining...")
+
+    # --- Train fresh ---
+    rows = []
     for filename in os.listdir(samples_path):
         if filename.endswith('.json'):
             with open(os.path.join(samples_path, filename)) as f:
@@ -35,8 +58,8 @@ def train_model():
                 rows.append(car)
 
     df = pd.DataFrame(rows)
-    print(f"Columns: {df.columns.tolist()}") 
-    print(f"Rows loaded: {len(df)}")           
+    print(f"Columns: {df.columns.tolist()}")
+    print(f"Rows loaded: {len(df)}")
 
     le_brand        = LabelEncoder()
     le_color        = LabelEncoder()
@@ -44,18 +67,21 @@ def train_model():
     le_transmission = LabelEncoder()
     le_status       = LabelEncoder()
 
-    df['brand']        = le_brand.fit_transform(df['brand'])                 # type: ignore
-    df['color']        = le_color.fit_transform(df['color'])                 # type: ignore
-    df['fuel_type']    = le_fuel.fit_transform(df['fuel_type'])              # type: ignore
-    df['transmission'] = le_transmission.fit_transform(df['transmission'])   # type: ignore
-    df['status']       = le_status.fit_transform(df['status'])               # type: ignore
+    df['brand']        = le_brand.fit_transform(df['brand'])               # type: ignore
+    df['color']        = le_color.fit_transform(df['color'])               # type: ignore
+    df['fuel_type']    = le_fuel.fit_transform(df['fuel_type'])            # type: ignore
+    df['transmission'] = le_transmission.fit_transform(df['transmission']) # type: ignore
+    df['status']       = le_status.fit_transform(df['status'])             # type: ignore
 
     X = df.drop(columns=['status'])
     y = df['status']
-
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    clf = RandomForestClassifier(n_estimators=n_samples , max_depth = 10 , min_samples_split = 5)
+    clf = RandomForestClassifier(
+        n_estimators=max(10, n_samples),
+        max_depth=10,
+        min_samples_split=5
+    )
     clf.fit(X_train, y_train)
 
     accuracy = clf.score(X_test, y_test) * 100
@@ -64,21 +90,37 @@ def train_model():
                      'num_seats', 'transmission', 'torque']
     importances = sorted(zip(feature_names, clf.feature_importances_), key=lambda x: x[1], reverse=True)
 
+    # --- Save everything to disk ---
+    bundle = {
+        "clf":             clf,
+        "le_brand":        le_brand,
+        "le_color":        le_color,
+        "le_fuel":         le_fuel,
+        "le_transmission": le_transmission,
+        "le_status":       le_status,
+        "accuracy":        accuracy,
+        "importances":     importances,
+        "n_samples":       n_samples,
+    }
+    joblib.dump(bundle, MODEL_PATH)
+    print(f"Model saved → {MODEL_PATH}")
+
     return clf, le_brand, le_color, le_fuel, le_transmission, le_status, accuracy, importances, n_samples
+
 
 def predict(clf, le_brand, le_color, le_fuel, le_transmission, le_status, cars):
     rows_to_predict = []
     for car in cars:
         rows_to_predict.append({
-            "brand":        le_brand.transform([car.brand])[0],          # type: ignore
+            "brand":        le_brand.transform([car.brand])[0],               # type: ignore
             "year":         car.year,
-            "color":        le_color.transform([car.color])[0],          # type: ignore
+            "color":        le_color.transform([car.color])[0],               # type: ignore
             "price":        car.price,
             "mileage":      car.mileage,
-            "fuel_type":    le_fuel.transform([car.fuel_type])[0],       # type: ignore
+            "fuel_type":    le_fuel.transform([car.fuel_type])[0],            # type: ignore
             "hp":           car.hp,
             "num_seats":    car.num_seats,
-            "transmission": le_transmission.transform([car.transmission])[0],  # type: ignore
+            "transmission": le_transmission.transform([car.transmission])[0], # type: ignore
             "torque":       car.torque
         })
 
@@ -89,7 +131,6 @@ def predict(clf, le_brand, le_color, le_fuel, le_transmission, le_status, cars):
     car1_chance = probabilities[0][accepted_index]
     car2_chance = probabilities[1][accepted_index]
     winner = 0 if car1_chance > car2_chance else 1
-
     return winner, car1_chance * 100, car2_chance * 100
 
 
@@ -107,8 +148,9 @@ class ResultGUI:
         self.subtext_font = font.Font(family="Courier New", size=9)
         self.imp_font     = font.Font(family="Courier New", size=10, weight="bold")
 
-        self.clf, self.le_brand, self.le_color, self.le_fuel, self.le_transmission, self.le_status, \
-            self.accuracy, self.importances, self.n_samples = train_model()
+        (self.clf, self.le_brand, self.le_color, self.le_fuel,
+         self.le_transmission, self.le_status,
+         self.accuracy, self.importances, self.n_samples) = train_model()
 
         self.build_ui()
         self.run_prediction()
@@ -197,20 +239,22 @@ class ResultGUI:
 
     def run_prediction(self):
         self.cars = generate_random_cars()
-        winner, c1, c2 = predict(self.clf, self.le_brand, self.le_color,
-                                  self.le_fuel, self.le_transmission, self.le_status, self.cars)
+        winner, c1, c2 = predict(
+            self.clf, self.le_brand, self.le_color,
+            self.le_fuel, self.le_transmission, self.le_status, self.cars
+        )
 
         specs = [
-            ("Brand",            lambda c: c.brand),
-            ("Year",             lambda c: str(c.year)),
-            ("Color",            lambda c: c.color),
-            ("Price",            lambda c: f"${c.price:,}"),
-            ("Mileage",          lambda c: f"{c.mileage:,} miles"),
-            ("Fuel Type",        lambda c: c.fuel_type),
-            ("HP",               lambda c: f"{c.hp} HP"),
-            ("Number of Seats",  lambda c: str(c.num_seats)),
-            ("Transmission",     lambda c: c.transmission),
-            ("Torque",           lambda c: f"{c.torque} Nm"),
+            ("Brand",           lambda c: c.brand),
+            ("Year",            lambda c: str(c.year)),
+            ("Color",           lambda c: c.color),
+            ("Price",           lambda c: f"${c.price:,}"),
+            ("Mileage",         lambda c: f"{c.mileage:,} miles"),
+            ("Fuel Type",       lambda c: c.fuel_type),
+            ("HP",              lambda c: f"{c.hp} HP"),
+            ("Number of Seats", lambda c: str(c.num_seats)),
+            ("Transmission",    lambda c: c.transmission),
+            ("Torque",          lambda c: f"{c.torque} Nm"),
         ]
 
         confidences = [c1, c2]
